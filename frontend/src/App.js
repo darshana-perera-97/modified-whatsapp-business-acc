@@ -1,71 +1,20 @@
-import { useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ChatList } from './components/ChatList';
-import { ChatWindow } from './components/ChatWindow';
-import { SnippetsPanel } from './components/SnippetsPanel';
-import { mockChats, mockMessages, mockSnippets } from './data/mockData';
-import { Toaster } from './components/ui/toaster';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Login } from './components/Login';
+import { SignUp } from './components/SignUp';
+import { Dashboard } from './components/Dashboard';
+import { WhatsAppConnect } from './components/WhatsAppConnect';
 
 function App() {
-  const [selectedChatId, setSelectedChatId] = useState('1');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [messages, setMessages] = useState(mockMessages);
-
-  const selectedChat = mockChats.find((chat) => chat.id === selectedChatId) || null;
-  const currentMessages = selectedChatId ? messages[selectedChatId] || [] : [];
-
-  const handleSendMessage = (text) => {
-    if (!selectedChatId) return;
-
-    const newMessage = {
-      id: `m${Date.now()}`,
-      text,
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      sender: 'me',
-      status: 'sent',
-    };
-
-    setMessages((prev) => ({
-      ...prev,
-      [selectedChatId]: [...(prev[selectedChatId] || []), newMessage],
-    }));
-  };
-
-  const handleSnippetDoubleClick = (snippet) => {
-    handleSendMessage(snippet.content);
-  };
-
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="flex h-screen bg-gray-100 overflow-hidden">
-        {/* Left Panel - Chat List (30%) */}
-        <div className="w-[30%] flex-shrink-0">
-          <ChatList
-            chats={mockChats}
-            selectedChatId={selectedChatId}
-            onSelectChat={setSelectedChatId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-        </div>
-
-        {/* Center Panel - Chat Window (45%) */}
-        <div className="w-[45%] flex-shrink-0">
-          <ChatWindow
-            chat={selectedChat}
-            messages={currentMessages}
-            onSendMessage={handleSendMessage}
-          />
-        </div>
-
-        {/* Right Panel - Snippets Panel (25%) */}
-        <div className="w-[25%] flex-shrink-0">
-          <SnippetsPanel snippets={mockSnippets} onSnippetDoubleClick={handleSnippetDoubleClick} />
-        </div>
-      </div>
-      <Toaster position="bottom-center" />
-    </DndProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/connect" element={<WhatsAppConnect />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
