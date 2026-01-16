@@ -18,18 +18,27 @@ export function WhatsAppConnect() {
     const userId = localStorage.getItem('userId');
     
     if (!userId) {
-      // Redirect to login if no user ID
-      navigate('/login');
       return;
     }
 
-    // Initialize WhatsApp connection
+    // Check for existing session first, then initialize if needed
     const initializeConnection = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Initialize WhatsApp
+        // First, check if session exists
+        const sessionResponse = await fetch(`${API_BASE_URL}/api/whatsapp/check-session/${userId}`);
+        const sessionData = await sessionResponse.json();
+
+        if (sessionData.success && sessionData.connected) {
+          // Session exists and is connected, navigate to dashboard
+          console.log('WhatsApp session restored, navigating to dashboard');
+          navigate('/dashboard');
+          return;
+        }
+
+        // No session or not connected, initialize new connection
         const initResponse = await fetch(`${API_BASE_URL}/api/whatsapp/initialize/${userId}`, {
           method: 'POST',
         });
@@ -44,6 +53,7 @@ export function WhatsAppConnect() {
         if (initData.connected) {
           setIsConnected(true);
           setIsLoading(false);
+          navigate('/dashboard');
           return;
         }
 
@@ -90,6 +100,22 @@ export function WhatsAppConnect() {
           if (qrPollInterval.current) {
             clearInterval(qrPollInterval.current);
           }
+          
+          // Update user data in backend
+          try {
+            await fetch(`${API_BASE_URL}/api/whatsapp/update-status/${userId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ connected: true }),
+            });
+          } catch (err) {
+            console.error('Error updating user status:', err);
+          }
+          
+          // Navigate to dashboard when connected
+          navigate('/dashboard');
         }
       } catch (err) {
         console.error('Error fetching QR code:', err);
@@ -112,6 +138,22 @@ export function WhatsAppConnect() {
           if (qrPollInterval.current) {
             clearInterval(qrPollInterval.current);
           }
+          
+          // Update user data in backend
+          try {
+            await fetch(`${API_BASE_URL}/api/whatsapp/update-status/${userId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ connected: true }),
+            });
+          } catch (err) {
+            console.error('Error updating user status:', err);
+          }
+          
+          // Navigate to dashboard when connected
+          navigate('/dashboard');
         }
       } catch (err) {
         console.error('Error checking status:', err);

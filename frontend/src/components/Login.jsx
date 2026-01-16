@@ -7,6 +7,7 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -28,19 +29,40 @@ export function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'Login failed. Please try again.');
+        setError(data.message || 'Login failed. Please try again.');
         return;
       }
 
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('userId', data.user.id);
+      
+      // Verify userId is saved
+      console.log('User logged in. UserID saved to localStorage:', data.user.id);
+      console.log('User data saved to localStorage:', data.user);
 
-      // Navigate to WhatsApp connection screen
-      navigate('/connect');
+      // Check if WhatsApp session exists
+      try {
+        const sessionResponse = await fetch(`http://localhost:5153/api/whatsapp/check-session/${data.user.id}`);
+        const sessionData = await sessionResponse.json();
+
+        if (sessionData.success && sessionData.connected) {
+          // Session exists and is connected, go to dashboard
+          console.log('WhatsApp session found and connected, navigating to dashboard');
+          navigate('/dashboard');
+        } else {
+          // No session or not connected, go to connect screen
+          console.log('No WhatsApp session found, navigating to connect screen');
+          navigate('/connect');
+        }
+      } catch (error) {
+        console.error('Error checking WhatsApp session:', error);
+        // On error, go to connect screen
+        navigate('/connect');
+      }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Failed to login. Please check your connection and try again.');
+      setError('Failed to login. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -57,6 +79,12 @@ export function Login() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -70,7 +98,10 @@ export function Login() {
                 required
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
                 className="w-full focus-visible:ring-emerald-500"
               />
             </div>
@@ -87,7 +118,10 @@ export function Login() {
                 required
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
                 className="w-full focus-visible:ring-emerald-500"
               />
             </div>

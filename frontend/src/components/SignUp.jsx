@@ -59,6 +59,14 @@ export function SignUp() {
         return;
       }
 
+      // Store user data in localStorage (auto-login after signup)
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userId', data.user.id);
+      
+      // Verify userId is saved
+      console.log('Account created. UserID saved to localStorage:', data.user.id);
+      console.log('User data saved to localStorage:', data.user);
+
       // Success - navigate to WhatsApp connection screen
       navigate('/connect');
     } catch (error) {

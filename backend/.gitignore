@@ -5,3 +5,7 @@ node_modules/
 
 # Ignore data directory containing user data
 data/
+
+# Ignore WhatsApp Web.js cache
+.wwebjs_cache/
+**/.wwebjs_cache/
